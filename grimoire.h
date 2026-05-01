@@ -4,10 +4,34 @@
 #include <stddef.h> 
 
 #define DB_NAME "grimoirestore.db"
+#define MAX_STORABLE_DECK 10
 
 // String length
 #define KEY_LENGTH 32
 #define NAME_LENGTH 64
+
+// Object Type
+#define DB 0
+#define DECK 1
+#define CARD 2
+// Error Messages
+#define CRITICAL 0
+#define STANDARD 1
+#define ERNO1 "Could not allocate Database"
+#define ERNO2 "Could not allocate space for the decks"
+#define ERNO3 "Could not allocate space for the card"
+#define ERNO4 "Unsupported object type"
+#define ERNO5 "Deck's key name cannot be longer than 32 characters"
+#define ERNO6 "Card's name cannot be longer than 64 characters"
+#define ERR_NO_DECK(deck_key) fprintf(stderr, "[ERROR] A card cannot be added to non-existing deck: %s\n", deck_key)
+#define EMPTY_DECK(deck_key) fprintf(stderr, "[ERROR] The deck '%s' does not have card stored in it\n", deck_key)
+#define NO_DECK_FOUND(deck_key) fprintf(stderr, "[ERROR] Could not find a deck named '%s'\n", deck_key);
+// UI Messages 
+#define CARD_ADDED_OK(card_name, deck_key) printf("Successfully added card '%s' to deck '%s'\n", card_name, deck_key)
+#define PRINT_CARD(card_name, mgk, att, def) printf("'%s': Magicka = %d, Attack = %d, Defence = %d\n", card_name, mgk, att, def)
+#define PRINT_DECK_STATS(card_count) printf("This deck has %d card/s stored in it\n", card_count)
+#define SEPARATOR printf("------------------------------------------------------------\n");
+#define NO_CARDS(deck_key) printf("Deck '%s' does not have cards stored in it\n", deck_key)
 
 struct LegendsCard
 {
@@ -32,7 +56,7 @@ struct Deck
 struct Database 
 {
     // The Hash Table spine
-    struct Deck **buckets; 
+    struct Deck **decks; 
     int capacity;
 };
 
@@ -117,9 +141,10 @@ unsigned int hash_key(char *key, int capacity);
  * @brief Prints a specific deck and all the cards it contains.
  * @param db Pointer to the active Database instance.
  * @param deck_key The string key of the deck to print.
+ * @param void print Callback 
  * @return void
  */
-void print_deck(struct Database *db, char *deck_key);
+void print_deck(struct Database *db, char *deck_key, void(*print)(struct Deck *deck));
 
 #endif
 
