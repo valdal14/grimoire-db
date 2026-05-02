@@ -30,7 +30,7 @@ void db_save(struct Database *db)
     size_t cards_counter = 0;
 
     // ==========================================
-    // PASS 1: COUNT DECKS AND CARDS IN-MEMORY
+    // COUNT DECKS AND CARDS IN-MEMORY
     // ==========================================
     for(int i = 0; i < db->capacity; i++)
     {
@@ -48,8 +48,7 @@ void db_save(struct Database *db)
 
     // If no deck is present in-memory we skip the save
     if(decks_counter == 0) return;
-
-    printf("Saving %zu Decks and %zu Cards to Vault...\n", decks_counter, cards_counter);
+    SAVE_PROGRESS(decks_counter, cards_counter);
 
     // ==========================================
     // THE VAULT FLOW
@@ -57,11 +56,8 @@ void db_save(struct Database *db)
     
     // Open the vault ONCE
     int fd = open(DB_NAME, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if(fd == -1) 
-    {
-        fprintf(stderr, "Fatal error: Could not open vault for saving.\n");
-        return;
-    }
+    // fd fails show error and exit
+    if(fd == -1) print_error(ERNO8, CRITICAL);
 
     // Write the Header
     struct DatabaseHeader db_header;
@@ -111,7 +107,7 @@ void db_save(struct Database *db)
 
     // Lock the vault
     close(fd);
-    printf("Vault successfully sealed.\n");
+    DB_SAVE_OK;
 }
 
 /**

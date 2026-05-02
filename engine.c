@@ -111,7 +111,6 @@ void add_deck(struct Database *db, char *deck_name)
     
     // hash the given key 
     int index = hash_key(deck_name, db->capacity);
-    printf("DECK INDEX = %d\n", index);    
     // copy the deck name into the new allocated deck  
     new_deck->key = strdup(deck_name);
 

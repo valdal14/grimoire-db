@@ -27,6 +27,7 @@
 #define ERNO5 "Deck's key name cannot be longer than 32 characters"
 #define ERNO6 "Card's name cannot be longer than 64 characters"
 #define ERNO7 "Unknow command"
+#define ERNO8 "[ERROR] Could not open database file for saving"
 #define ERR_NO_DECK(deck_key) fprintf(stderr, "[ERROR] A card cannot be added to non-existing deck: %s\n", deck_key)
 #define EMPTY_DECK(deck_key) fprintf(stderr, "[ERROR] The deck '%s' does not have card stored in it\n", deck_key)
 #define NO_DECK_FOUND(deck_key) fprintf(stderr, "[ERROR] Could not find a deck named '%s'\n", deck_key);
@@ -40,6 +41,8 @@
 #define INVALID_QUERY_CARD "[ERROR] Invalid Query. Query must be like <ADD CARD 'My Card' VAL(1,1,1) TO 'My Deck'>. Please type HELP for more info."
 #define INVALID_QUERY_SELECT "[ERROR] Invalid Query. Query must be like <SELECT CARDS FROM 'My Deck'>. Please type HELP for more info."
 #define DECK_ADDED_MSG(deck_key) printf("%s deck added Successfully\n", deck_key);
+#define SAVE_PROGRESS(decks_counter, cards_counter) printf("Saving %zu Decks and %zu Cards to Disk...\n", decks_counter, cards_counter);
+#define DB_SAVE_OK printf("Changes successfully saved to disk.\n");
 // Shell Commands
 #define EXIT 0
 #define HELP 1
