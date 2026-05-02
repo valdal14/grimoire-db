@@ -15,7 +15,6 @@ Memory management is strictly controlled, utilizing an "inside-out" cascading de
 ## 🛠️ Compilation
 Ensure you are using a standard C compiler (like GCC) and compile with POSIX 2008 standards for `strdup` support:
 ```bash
-gcc -O2 -W -Wall main.c engine.c -o grimoire.out
 gcc -std=c99 -D_POSIX_C_SOURCE=200809L grimoire.c engine.c -o grimoire.out
 ./grimoire.out
 ```
