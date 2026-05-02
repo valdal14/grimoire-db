@@ -23,6 +23,7 @@
 #define ERNO4 "Unsupported object type"
 #define ERNO5 "Deck's key name cannot be longer than 32 characters"
 #define ERNO6 "Card's name cannot be longer than 64 characters"
+#define ERNO7 "Unknow command"
 #define ERR_NO_DECK(deck_key) fprintf(stderr, "[ERROR] A card cannot be added to non-existing deck: %s\n", deck_key)
 #define EMPTY_DECK(deck_key) fprintf(stderr, "[ERROR] The deck '%s' does not have card stored in it\n", deck_key)
 #define NO_DECK_FOUND(deck_key) fprintf(stderr, "[ERROR] Could not find a deck named '%s'\n", deck_key);
@@ -30,8 +31,17 @@
 #define CARD_ADDED_OK(card_name, deck_key) printf("Successfully added card '%s' to deck '%s'\n", card_name, deck_key)
 #define PRINT_CARD(card_name, mgk, att, def) printf("'%s': Magicka = %d, Attack = %d, Defence = %d\n", card_name, mgk, att, def)
 #define PRINT_DECK_STATS(card_count) printf("This deck has %d card/s stored in it\n", card_count)
-#define SEPARATOR printf("------------------------------------------------------------\n");
+#define SEPARATOR printf("----------------------------------------------------------------------\n");
 #define NO_CARDS(deck_key) printf("Deck '%s' does not have cards stored in it\n", deck_key)
+#define INVALID_QUERY_DECK "[ERROR] Invalid Query. Query must be like <ADD DECK 'My Deck'>. Please type HELP for more info."
+#define INVALID_QUERY_CARD "[ERROR] Invalid Query. Query must be like <ADD CARD 'My Card' VAL(1,1,1) TO 'My Deck'>. Please type HELP for more info."
+#define INVALID_QUERY_SELECT "[ERROR] Invalid Query. Query must be like <SELECT CARDS FROM 'My Deck'>. Please type HELP for more info."
+#define DECK_ADDED_MSG(deck_key) printf("%s deck added Successfully\n", deck_key);
+// Shell Commands
+#define EXIT 0
+#define HELP 1
+#define QUERY 2
+
 
 struct LegendsCard
 {
@@ -146,5 +156,19 @@ unsigned int hash_key(char *key, int capacity);
  */
 void print_deck(struct Database *db, char *deck_key, void(*print)(struct Deck *deck));
 
-#endif
+/**
+ * @brief Prints out all cards stats stored inside the given deck
+ * @param struct Deck pointer
+ * @return void
+ */
+void print_cards(struct Deck *deck);
 
+/**
+ * @brief Prints out the error message based on a given error type
+ * @param char erno The pointer to the error message stored in the .h file
+ * @param int error_type The type of the error to cast declared in the .h file
+ * @return void
+ */
+void print_error(char *erno, int error_type);
+
+#endif
