@@ -2,304 +2,247 @@
 #include <stdlib.h>
 #include <string.h>
 #include "grimoire.h"
-#define _POSIX_C_SOURCE 200809L
 
-// Helper Functions ############################################################### 
+// Interface ######################################################################
 
 /**
- * @brief Prints out the error message based on a given error type
- * @param char erno The pointer to the error message stored in the .h file
- * @param int error_type The type of the error to cast declared in the .h file
+ * Shows the welcome menu to the user 
  * @return void
  */
-void print_error(char *erno, int error_type)
+void user_menu(void)
 {
-    fprintf(stderr,"%s\n", erno);
-    if(error_type == CRITICAL) exit(1);
+    printf("#####################################\n");
+    printf("# GRIMOIRE Initialised              #\n");
+    printf("# Type: HELP to learn about cmds    #\n");
+    printf("# Type: EXIT to quit the process    #\n");
+    printf("#####################################\n");
 }
-
 /**
- * @brief Verify the allocation of a given object 
- * @param void p Pointer
- * @param int p_type The pointer type based on the Object Type declared
- * in the .h file
- * @return void
+ * @brief Parses, validates and maps the first two input keywords to decided
+ * which query will be executed:
+ * 0 add deck query 
+ * 1 add card query
+ * 3 select query
+ * -1 error
+ * @param struct Database pointer
+ * @param char cmd1 The first input keyword
+ * @param char cmd2 The second input keyword
+ * @return int
  */
-void check_alloc(void *p, int p_type)
+int parse_command(char *cmd1, char *cmd2)
 {
-    switch(p_type)
+    if((strcmp(cmd1, "ADD") == 0) && (strcmp(cmd2, "DECK") == 0))
     {
-        case 0:
-            if((struct Database *)p == NULL) print_error(ERNO1, CRITICAL);
-            break;
-        case 1:
-            if((struct Deck *)p == NULL) print_error(ERNO2, CRITICAL);
-            break;
-        case 2:
-            if((struct LegendsCard *)p == NULL) print_error(ERNO3, CRITICAL);
-            break;
-        default:
-            print_error(ERNO4, CRITICAL);
-            break;
+        return 0;
     }
-}
-
-/**
- * @brief Checks the length of the user's input 
- * @param char s pointer 
- * @param int s_type The type of the string either DECK or CARD 
- * declared in the .h file 
- * @return void
- */
-void check_user_input(char *s, int s_type)
-{
-    switch(s_type)
+    else if((strcmp(cmd1, "ADD") == 0) && (strcmp(cmd2, "CARD") == 0))
     {
-        // Deck Key
-        case 1:
-            if(strlen(s) + 1 >= KEY_LENGTH) print_error(ERNO5, STANDARD);
-            break;
-        // Card name 
-        case 2:
-            if(strlen(s) + 1 >= NAME_LENGTH) print_error(ERNO6, STANDARD);
-            break;
-        default:
-            print_error(ERNO4, CRITICAL);
-            break;
-
+        return 1;
     }
-}
-
-// Core Engine APIs ###############################################################
-
-struct Database *init_db(void)
-{
-    struct Database *db = (struct Database *)malloc(sizeof(struct Database));
-    check_alloc(db, DB);
-    // set the max num of decks we can store
-    db->capacity = MAX_STORABLE_DECK;
-    db->decks = (struct Deck **)calloc(db->capacity, sizeof(struct Deck *));
-    check_alloc(db->decks, DECK);
-
-    return db;
-}
-
-unsigned int hash_key(char *key, int capacity)
-{
-    int hash = 0;
-    while (*key != '\0') {
-        hash = (hash + *key) % capacity;
-        key++;
-    }
-    return hash;
-}
-
-/**
- * @brief Initializes an empty deck and set its name
- * @param db Pointer to the active Database instance
- * @param deck_name The key (also acts as deck name) 
- * @return void
- */
-void add_deck(struct Database *db, char *deck_name)
-{
-    // check user input
-    check_user_input(deck_name, DECK);
-    
-    // allocate space for the new deck 
-    struct Deck *new_deck = (struct Deck *)calloc(1, sizeof(struct Deck));
-    check_alloc(new_deck, DECK);
-    
-    // hash the given key 
-    int index = hash_key(deck_name, db->capacity);
-    
-    // copy the deck name into the new allocated deck  
-    new_deck->key = strdup(deck_name);
-
-    // Head Insertion (Handles both NULL and Collision)
-    new_deck->next = db->decks[index]; 
-    db->decks[index] = new_deck;
-}
-
-/**
- * @brief Creates a new card and adds it to the specified deck using O(1) head insertion.
- * @param struct Database db pointer
- * @param char deck_key pointer The FK that points to the correct deck
- * @param char name pointer The name of the card
- * @param int magicka_cost How much does this card costs to play
- * @param int attack The attack power 
- * @param int defence The defence power
- * @return void
- */
-void add_card(struct Database *db, char *deck_key, char *name, int magicka_cost, int attack, int defence)
-{
-    // check user input
-    check_user_input(deck_key, DECK);
-    check_user_input(name, CARD);
-    
-    // Allocate space for the new card 
-    struct LegendsCard *card = (struct LegendsCard *)calloc(1, sizeof(struct LegendsCard));
-    check_alloc(card, CARD);
-    
-    // allocate the space for the new card's name and copy the new value 
-    card->name = strdup(name);
-    card->magicka_cost = magicka_cost;
-    card->attack = attack;
-    card->defence = defence;
-    
-    // hash the deck key to find its index
-    int index = hash_key(deck_key, db->capacity);
-    
-    // Get the head of the bucket
-    struct Deck *current_deck = db->decks[index];
-
-    // Traverse the linked list of Decks in this bucket
-    while(current_deck != NULL)
+    else if((strcmp(cmd1, "SELECT") == 0) && (strcmp(cmd2, "CARDS") == 0))
     {
-        // Check if this deck is the one we are looking for
-        if(strcmp(deck_key, current_deck->key) == 0)
-        {
-            // Head Insertion into current_deck
-            card->next = current_deck->cards_head;
-            current_deck->cards_head = card;
-            
-            CARD_ADDED_OK(card->name, current_deck->key);        
-            return;
-        }
-        
-        // Move to the next deck in the collision chain
-        current_deck = current_deck->next;
-    }
-
-    // Deck was not found.
-    ERR_NO_DECK(deck_key);
-    
-    // clean up the allocated memory
-    free(card->name);
-    free(card);
-}
-
-/**
- * @brief Searches for a deck by its key and executes a callback function on it.
- * @param db Pointer to the active Database instance.
- * @param deck_key The string key of the deck to find.
- * @param print Function pointer to the callback that handles the presentation logic.
- * @return void
- */
-void print_deck(struct Database *db, char *deck_key, void(*print)(struct Deck *deck))
-{
-    check_user_input(deck_key, DECK);
-    int index = hash_key(deck_key, db->capacity);
-
-    struct Deck *current = db->decks[index];
-        
-    while(current != NULL)
-    {
-        // check if the deck_key matches the deck key at index 
-        if(strcmp(deck_key, current->key) == 0)
-        {
-            // callback: print cards stored in the current deck 
-            print(current);
-            return; 
-        }
-
-        current = current->next;
-    }
-   
-    NO_DECK_FOUND(deck_key);
-}
-
-/**
- * @brief Prints out all cards stats stored inside the given deck
- * @param struct Deck pointer
- * @return void
- */
-void print_cards(struct Deck *deck)
-{
-    int card_counter = 0;
-    struct LegendsCard *cards = deck->cards_head;
-
-    while(cards != NULL)
-    {
-        PRINT_CARD(cards->name, cards->magicka_cost, cards->attack, cards->defence); 
-        card_counter += 1;
-        cards = cards->next;
-    }
-    
-    if(card_counter > 0)
-    {
-        SEPARATOR;
-        PRINT_DECK_STATS(card_counter);
+        return 2;
     }
     else
     {
-        SEPARATOR;
-        NO_CARDS(deck->key);
+        return -1;
     }
-
 }
 
 /**
- * @brief Safely frees all memory associated with the database (arrays, structs, and strings).
- * @param db Pointer to the active Database instance.
+ * @brief Internally calls the add_deck method
+ * @param struct Database pointer
+ * @param char deck_key The name/key of the deck
  * @return void
  */
-void db_free(struct Database *db)
+void parse_add_deck(struct Database *db, char *deck_key)
 {
-    if (db == NULL) return;
+    add_deck(db, deck_key);
+    DECK_ADDED_MSG(deck_key);
+}
 
-    for(int i = 0; i < db->capacity; i++)
+/**
+ * @brief Parses, validates the query and internally calls the add_card function
+ * @param struct Database pointer
+ * @param char card_name The name of the card 
+ * @param char cmd_val The VAL keyword from the user's query
+ * @param char mgk The magicka cost of the card 
+ * @param char atk The attack power of the card
+ * @param char def The defence power of the card
+ * @param char cmd_to The TO keyword from the user's query
+ * @param char deck_name The name of the deck
+ * @return void
+ */
+void parse_add_card(struct Database *db, char *card_name, char *cmd_val, char *mgk, char *atk, char*def, char *cmd_to, char *deck_name)
+{
+    int is_valid = 1;
+    int mgk_int = atoi(mgk);
+    int atk_int = atoi(atk);
+    int def_int = atoi(def);
+
+    if((strcmp(cmd_val, "VAL") != 0) || (strcmp(cmd_to, "TO") != 0)) is_valid--;
+    
+
+    if(is_valid)
     {
-        struct Deck *current_deck = db->decks[i];
-        struct Deck *next_deck;
+        add_card(db, deck_name, card_name, mgk_int, atk_int, def_int);
+    }
+    else
+    {
+        print_error(INVALID_QUERY_CARD, STANDARD);
+    }
+}
 
-        // Traverse the collision chain of decks
-        while(current_deck != NULL)
+/**
+ * @brief Parses, validates the query and internally calls the print_deck function
+ * @param struct Database pointer
+ * @param char cmd_from The command FROM from the user's query 
+ * @param char deck_name The given deck name from the user's query
+ * @return void
+ */
+void parse_select(struct Database *db, char *cmd_from, char *deck_name)
+{
+    int is_valid = 1;
+    if((strcmp(cmd_from, "FROM") != 0)) is_valid--;
+    
+    if(is_valid)
+    {
+        print_deck(db, deck_name, print_cards);
+    }
+    else
+    {
+        print_error(INVALID_QUERY_SELECT, STANDARD);
+    }
+}
+
+/**
+ * @brief Handles the incoming buffer and the logic for the commands
+ * execution flow.
+ * @param struct Database pointer
+ * @param char cmd The buffer read 
+ * @param int cmd_type The type of the command
+ * @return void
+ */
+void handle_command(struct Database *db, char *cmd, int cmd_type)
+{
+    switch(cmd_type)
+    {
+        case 0:
+            printf("🫡|See you next time\n");
+            /// TODO: callaback to save....
+
+            // free the heap and exit
+            db_free(db);
+            exit(1);
+        case 1:
+            SEPARATOR;
+            printf("📖|GRIMOIRE Help\n\n");
+            printf("Supported operations:\n");
+            printf("1 - Adding a new deck\n");
+            printf("\t ADD DECK '<deck_name>'\n");
+            printf("\t I.E: ADD DECK 'Neutral Control'\n");
+            printf("2 - Adding a new card\n");
+            printf("\t VAL(magicka_cost, attack, defence)\n");
+            printf("\t ADD CARD '<card_name>' VAL(0,1,1) TO '<deck_name>'\n");
+            printf("\t I.E: ADD CARD 'Adoring Fan' VAL(2,3,1) TO 'Neutral Control'\n");
+            printf("3 - Get a cards stored in a deck\n");
+            printf("\t SELECT CARDS FROM '<deck_name>'\n");
+            printf("\t SELECT CARDS FROM 'Neutral Control'\n");
+            SEPARATOR;
+            break;
+        case 2:
         {
-            next_deck = current_deck->next;
+            // get the first two input to detect the user command intensions
+            char *cmd1 = strtok(cmd, " ");
+            char *cmd2 = strtok(NULL, " ");
+            // get the mapped query result after parsing the first two keywords
+            int mapped_result = parse_command(cmd1, cmd2);
 
-            struct LegendsCard *current_card = current_deck->cards_head;
-            struct LegendsCard *next_card;
-
-            // Traverse the chain of cards
-            while(current_card != NULL)
+            // parse the command 
+            switch(mapped_result)
             {
-                next_card = current_card->next;
-                
-                // Free the strdup'd string
-                if (current_card->name != NULL) free(current_card->name);
-                free(current_card);
-                
-                current_card = next_card;
+                case 0: // Add Deck
+                {
+                    char *deck_key = strtok(NULL, "'");
+                    // parse and add the new deck 
+                    parse_add_deck(db, deck_key);
+                    break;
+                }
+                case 1: // Add Card
+                {
+                    char *card_name = strtok(NULL, "'");
+                    char *val_kw = strtok(NULL, " (");
+                    char *mag_str = strtok(NULL, ",");
+                    char *atk_str = strtok(NULL, ",");
+                    char *def_str = strtok(NULL, ") ");
+                    char *to_kw = strtok(NULL, " '");
+                    char *dest_deck = strtok(NULL, "'");
+                    // parse cmds and add new card
+                    parse_add_card(db, card_name, val_kw, mag_str, atk_str, def_str, to_kw, dest_deck);
+                    break;
+                }
+                case 2: // Select Cards
+                {
+                    char *from = strtok(NULL, " ");
+                    char *deck_name = strtok(NULL, "'");
+                    // parse and print the entire deck
+                    parse_select(db, from, deck_name);
+                    break;
+                }
+                default:
+                    print_error(INVALID_QUERY_DECK, STANDARD);
+                    break;
             }
+            break;
+        }
+        default:
+            print_error(ERNO7, STANDARD);
+    }
+}
 
-            // Free the strdup'd deck key
-            if (current_deck->key != NULL) free(current_deck->key); 
-            free(current_deck);
+/**
+ * @brief Program Loop - Read user commands
+ * @param struct Database pointer 
+ * @return void
+ */
+void get_user_input(struct Database *db)
+{
+    char buffer[256];
+    
+    while(1)
+    {
+        printf("grimoire> ");
 
-            current_deck = next_deck;
+        if(fgets(buffer, sizeof(buffer), stdin) != NULL)
+        {
+            buffer[strcspn(buffer, "\n")] = '\0';
+            
+            if(strcmp(buffer, "EXIT") == 0 || strcmp(buffer, "exit") == 0)
+            {
+                handle_command(db, buffer, EXIT);
+            }
+            else if(strcmp(buffer, "HELP") == 0 || strcmp(buffer, "help") == 0)
+            {
+                handle_command(db, buffer, HELP);
+            }
+            else
+            {
+                handle_command(db, buffer, QUERY);
+            }
         }
     }
-
-    free(db->decks); 
-    free(db);
 }
 
 // MAIN ########################################################################### 
 
 int main(void)
 {
+    // show menu
+    user_menu();
+    // init GRIMOIRE
     struct Database *db = init_db();
-    // add new deck 
-    add_deck(db, "tribunal control");
-    add_deck(db, "mid-battlemage");
-    add_deck(db, "battlemage");
+    // Input loop
+    get_user_input(db);
     
-    add_card(db, "battlemage", "Reading Party", 0, 1, 1);
-    // Add a second card
-    add_card(db, "battlemage", "Afflicted Alit", 2, 3, 1);
-
-    print_deck(db, "battlemage", print_cards);
-   
-    db_free(db);
     return 0;
 }
