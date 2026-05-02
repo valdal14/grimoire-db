@@ -128,11 +128,12 @@ void handle_command(struct Database *db, char *cmd, int cmd_type)
     switch(cmd_type)
     {
         case 0:
-            printf("🫡|See you next time\n");
-            /// TODO: callaback to save....
-
-            // free the heap and exit
+            // save to disk on exit
+            db_save(db);
+            // free the heap 
             db_free(db);
+
+            printf("🫡|See you next time\n");
             exit(1);
         case 1:
             SEPARATOR;

@@ -14,10 +14,13 @@
 #define DB 0
 #define DECK 1
 #define CARD 2
+#define HEADER 3
+#define STORED_DECK 4
+#define STORED_CARD 5
 // Error Messages
 #define CRITICAL 0
 #define STANDARD 1
-#define ERNO1 "Could not allocate Database"
+#define ERNO1 "Could not allocate space for the Database"
 #define ERNO2 "Could not allocate space for the decks"
 #define ERNO3 "Could not allocate space for the card"
 #define ERNO4 "Unsupported object type"
@@ -118,6 +121,15 @@ void db_save(struct Database *db);
  * @return void
  */
 void db_free(struct Database *db);
+
+/**
+ * @brief Verify the allocation of a given object 
+ * @param void p Pointer
+ * @param int p_type The pointer type based on the Object Type declared
+ * in the .h file
+ * @return void
+ */
+void check_alloc(void *p, int p_type);
 
 /** 
  * @brief Initializes an empty deck and set its name
