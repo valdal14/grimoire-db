@@ -14,16 +14,20 @@
 #define DB 0
 #define DECK 1
 #define CARD 2
+#define HEADER 3
+#define STORED_DECK 4
+#define STORED_CARD 5
 // Error Messages
 #define CRITICAL 0
 #define STANDARD 1
-#define ERNO1 "Could not allocate Database"
+#define ERNO1 "Could not allocate space for the Database"
 #define ERNO2 "Could not allocate space for the decks"
 #define ERNO3 "Could not allocate space for the card"
 #define ERNO4 "Unsupported object type"
 #define ERNO5 "Deck's key name cannot be longer than 32 characters"
 #define ERNO6 "Card's name cannot be longer than 64 characters"
 #define ERNO7 "Unknow command"
+#define ERNO8 "[ERROR] Could not open database file for saving"
 #define ERR_NO_DECK(deck_key) fprintf(stderr, "[ERROR] A card cannot be added to non-existing deck: %s\n", deck_key)
 #define EMPTY_DECK(deck_key) fprintf(stderr, "[ERROR] The deck '%s' does not have card stored in it\n", deck_key)
 #define NO_DECK_FOUND(deck_key) fprintf(stderr, "[ERROR] Could not find a deck named '%s'\n", deck_key);
@@ -37,6 +41,8 @@
 #define INVALID_QUERY_CARD "[ERROR] Invalid Query. Query must be like <ADD CARD 'My Card' VAL(1,1,1) TO 'My Deck'>. Please type HELP for more info."
 #define INVALID_QUERY_SELECT "[ERROR] Invalid Query. Query must be like <SELECT CARDS FROM 'My Deck'>. Please type HELP for more info."
 #define DECK_ADDED_MSG(deck_key) printf("%s deck added Successfully\n", deck_key);
+#define SAVE_PROGRESS(decks_counter, cards_counter) printf("Saving %zu Decks and %zu Cards to Disk...\n", decks_counter, cards_counter);
+#define DB_SAVE_OK printf("Changes successfully saved to disk.\n");
 // Shell Commands
 #define EXIT 0
 #define HELP 1
@@ -118,6 +124,15 @@ void db_save(struct Database *db);
  * @return void
  */
 void db_free(struct Database *db);
+
+/**
+ * @brief Verify the allocation of a given object 
+ * @param void p Pointer
+ * @param int p_type The pointer type based on the Object Type declared
+ * in the .h file
+ * @return void
+ */
+void check_alloc(void *p, int p_type);
 
 /** 
  * @brief Initializes an empty deck and set its name
