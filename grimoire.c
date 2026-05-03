@@ -238,10 +238,10 @@ void get_user_input(struct Database *db)
 
 int main(void)
 {
+    // init GRIMOIRE
+    struct Database *db = db_load();
     // show menu
     user_menu();
-    // init GRIMOIRE
-    struct Database *db = init_db();
     // Input loop
     get_user_input(db);
     
